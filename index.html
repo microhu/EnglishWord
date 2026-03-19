@@ -1,0 +1,1915 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>单词记忆训练 | Word Memory Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f7f9fc;
+      --surface: #ffffff;
+      --ink: #1e293b;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --brand: #2f7dff;
+      --brand-soft: #e9f1ff;
+      --good: #1f9d59;
+      --warn: #dd3f3f;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Space Grotesk", "Noto Serif SC", sans-serif;
+      background:
+        radial-gradient(900px 300px at 50% -20%, #e7f0ff, transparent 65%),
+        var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 18px 12px 26px;
+    }
+
+    .frame {
+      max-width: 760px;
+      margin: 0 auto;
+      display: grid;
+      gap: 14px;
+    }
+
+    header {
+      display: grid;
+      gap: 6px;
+      text-align: center;
+    }
+
+    .eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(24px, 5vw, 30px);
+      line-height: 1.2;
+    }
+
+    .subtitle {
+      margin: 0 auto;
+      color: var(--muted);
+      font-size: 13px;
+      max-width: 520px;
+    }
+
+    .trainer {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px;
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .trainer::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, rgba(47, 125, 255, 0.08), rgba(255, 196, 99, 0.06));
+      pointer-events: none;
+    }
+
+    .trainer.win {
+      animation: winPulse 0.55s ease;
+    }
+
+    .topline {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .mode-pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      background: var(--brand-soft);
+      color: #2259b8;
+      padding: 6px 11px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .small-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .chips button {
+      border: 1px solid var(--line);
+      background: #f8fafc;
+      color: #334155;
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .chips button.secondary {
+      background: var(--brand-soft);
+      border-color: #c9dcff;
+      color: #1f5ec9;
+    }
+
+    .chips button.is-active {
+      background: var(--brand);
+      border-color: var(--brand);
+      color: #ffffff;
+    }
+
+    .prompt {
+      margin: 2px 0 0;
+      font-size: clamp(20px, 3.5vw, 27px);
+      line-height: 1.35;
+      font-weight: 700;
+      text-align: center;
+      min-height: 72px;
+      display: grid;
+      align-items: center;
+    }
+
+    .prompt.pop {
+      animation: popText 0.3s ease;
+    }
+
+    .mask {
+      text-align: center;
+      font-size: clamp(19px, 2.8vw, 24px);
+      letter-spacing: 0.14em;
+      font-weight: 700;
+      color: #334155;
+      margin-top: -4px;
+    }
+
+    .mask span {
+      display: inline-block;
+      min-width: 0.6em;
+      border-bottom: 2px solid #94a3b8;
+      text-align: center;
+      margin-right: 0.06em;
+    }
+
+    .mask.sentence {
+      letter-spacing: 0.02em;
+      font-size: clamp(16px, 2.5vw, 20px);
+      line-height: 1.55;
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+      text-align: left;
+      color: #334155;
+    }
+
+    .meta {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: -2px;
+    }
+
+    .meta span {
+      font-size: 12px;
+      color: var(--muted);
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 8px;
+    }
+
+    .input-row {
+      display: grid;
+      gap: 8px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      background: #fff;
+      border-radius: 12px;
+      font-size: 18px;
+      padding: 13px 14px;
+      outline: none;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(47, 125, 255, 0.12);
+    }
+
+    input[type="text"].shake {
+      animation: shake 0.35s ease;
+      border-color: #ef4444;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      background: #f8fafc;
+      color: #334155;
+      border-radius: 10px;
+      padding: 9px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    button.primary {
+      background: var(--brand);
+      color: #fff;
+      border-color: var(--brand);
+    }
+
+    button.secondary {
+      background: var(--brand-soft);
+      border-color: #c9dcff;
+      color: #1f5ec9;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr;
+      gap: 7px;
+    }
+
+    .feedback {
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      display: none;
+    }
+
+    .feedback.good {
+      display: block;
+      background: #eaf8ef;
+      color: var(--good);
+    }
+
+    .feedback.bad {
+      display: block;
+      background: #fdeeee;
+      color: var(--warn);
+    }
+
+    .reward-toast {
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #0f766e;
+      background: #d1fae5;
+      border: 1px solid #99f6e4;
+      border-radius: 999px;
+      padding: 6px 10px;
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+    }
+
+    .reward-toast.show {
+      animation: toastInOut 1.15s ease;
+    }
+
+    .answer-card {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 11px;
+      display: none;
+      background: #f8fafc;
+    }
+
+    .answer-card.show {
+      display: grid;
+      gap: 4px;
+    }
+
+    .answer-word {
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .answer-detail {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .status {
+      border-top: 1px solid var(--line);
+      padding-top: 10px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .progress {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .progress-bar {
+      height: 8px;
+      border-radius: 999px;
+      background: #e2e8f0;
+      overflow: hidden;
+    }
+
+    .progress-bar span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #79a6ff, #2f7dff);
+      transition: width 0.25s ease;
+    }
+
+    .settings-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .status-strip {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .goal-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .list-controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 2px;
+    }
+
+    .gamify {
+      display: grid;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .gamify-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .combo-value {
+      color: #2563eb;
+      font-weight: 700;
+    }
+
+    .combo-bar {
+      height: 8px;
+      border-radius: 999px;
+      background: #dbeafe;
+      overflow: hidden;
+    }
+
+    .combo-bar span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #60a5fa, #2563eb);
+      transition: width 0.25s ease;
+    }
+
+    .goal-bar {
+      height: 8px;
+      border-radius: 999px;
+      background: #dcfce7;
+      overflow: hidden;
+    }
+
+    .goal-bar span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #34d399, #22c55e);
+      transition: width 0.25s ease;
+    }
+
+    .toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .memory-stats {
+      display: inline-flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .list-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .mastery-drawer {
+      display: none;
+    }
+
+    .mastery-drawer.show {
+      display: block;
+    }
+
+    .list-title {
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .mastery-list {
+      max-height: 220px;
+      overflow: auto;
+      display: grid;
+      gap: 6px;
+    }
+
+    .mastery-item {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px;
+      display: grid;
+      gap: 3px;
+      background: #f8fafc;
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+
+    .mastery-item:hover {
+      transform: translateY(-1px);
+      border-color: #93c5fd;
+    }
+
+    .mastery-item strong {
+      font-size: 14px;
+      line-height: 1.2;
+    }
+
+    .mastery-item span {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .empty-text {
+      color: var(--muted);
+      font-size: 12px;
+      padding: 8px 2px;
+    }
+
+    .mini-btn {
+      padding: 5px 10px;
+      font-size: 12px;
+      border-radius: 999px;
+    }
+
+    .goal-input {
+      width: 62px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 4px 6px;
+      font-size: 12px;
+      background: #fff;
+      color: var(--ink);
+    }
+
+    .confetti-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 30;
+    }
+
+    .goal-burst {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+      z-index: 40;
+      opacity: 0;
+    }
+
+    .goal-burst.show {
+      animation: fadeBurst 1.2s ease;
+    }
+
+    .goal-card {
+      background: #0f172a;
+      color: #fff;
+      border-radius: 14px;
+      padding: 14px 18px;
+      font-size: 16px;
+      font-weight: 700;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.35);
+      transform: scale(0.85);
+      animation: popGoal 1.2s ease;
+    }
+
+    .confetti-bit {
+      position: absolute;
+      width: 8px;
+      height: 12px;
+      border-radius: 2px;
+      opacity: 0.95;
+      animation: confettiDrop 850ms ease-out forwards;
+    }
+
+    @keyframes confettiDrop {
+      0% { transform: translateY(0) rotate(0deg); opacity: 0.95; }
+      100% { transform: translateY(120px) rotate(260deg); opacity: 0; }
+    }
+
+    @keyframes toastInOut {
+      0% { opacity: 0; transform: translateY(10px); }
+      20% { opacity: 1; transform: translateY(0); }
+      75% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-6px); }
+    }
+
+    @keyframes popText {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.03); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes winPulse {
+      0% { box-shadow: var(--shadow); }
+      45% { box-shadow: 0 14px 34px rgba(37, 99, 235, 0.22); }
+      100% { box-shadow: var(--shadow); }
+    }
+
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-4px); }
+      50% { transform: translateX(4px); }
+      75% { transform: translateX(-3px); }
+      100% { transform: translateX(0); }
+    }
+
+    @keyframes fadeBurst {
+      0% { opacity: 0; }
+      15% { opacity: 1; }
+      85% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    @keyframes popGoal {
+      0% { transform: scale(0.85); }
+      20% { transform: scale(1.03); }
+      100% { transform: scale(1); }
+    }
+
+    @media (max-width: 760px) {
+      .actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+    }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <header>
+      <div class="eyebrow">Baicizhan Style</div>
+      <h1>单词记忆</h1>
+      <p class="subtitle">简洁练习模式：看提示，拼单词，立刻反馈。</p>
+    </header>
+
+    <section class="trainer" id="trainerCard">
+      <div class="reward-toast" id="rewardToast"></div>
+      <div class="topline">
+        <span class="mode-pill" id="modePill">提示：中文释义 · 题型：听写</span>
+        <div class="small-actions">
+          <button id="focusToggleBtn" type="button">练习：普通</button>
+          <button id="scopeToggleBtn" type="button">范围：清单优先</button>
+          <button id="uploadBtn" type="button">导入 CSV</button>
+          <button id="loadSampleBtn" type="button">示例词库</button>
+        </div>
+      </div>
+
+      <input class="file-input" type="file" id="csvInput" accept=".csv,text/csv" />
+
+      <div class="chips">
+        <button data-mode="cn">中文</button>
+        <button data-mode="en">英文</button>
+        <button data-mode="pron">发音</button>
+        <button data-mode="mix" class="secondary">随机</button>
+      </div>
+      <div class="chips">
+        <button data-type="spell" class="secondary">听写</button>
+        <button data-type="fill">补全</button>
+        <button data-type="cloze">例句挖空</button>
+      </div>
+
+      <h2 class="prompt" id="prompt">加载中...</h2>
+      <div class="mask" id="mask" style="display:none;"></div>
+      <div class="meta" id="meta"></div>
+
+      <div class="input-row">
+        <input type="text" id="answerInput" placeholder="输入完整单词" autocomplete="off" />
+        <div class="actions">
+          <button class="primary" id="checkBtn">提交</button>
+          <button id="hintBtn">提示</button>
+          <button class="secondary" id="speakBtn">发音</button>
+          <button id="revealBtn">答案</button>
+        </div>
+      </div>
+
+      <div class="feedback" id="feedback"></div>
+      <div class="answer-card" id="answerCard"></div>
+
+      <div class="status">
+        <div class="progress">
+          <span id="progressText">0 / 0</span>
+          <span id="scoreText">正确率 0%</span>
+        </div>
+        <div class="progress-bar"><span id="progressBar"></span></div>
+        <div class="gamify">
+          <div class="gamify-line">
+            <span id="comboText">连击 0</span>
+            <span class="combo-value" id="comboScoreText">得分 0</span>
+          </div>
+          <div class="combo-bar"><span id="comboBar"></span></div>
+          <div class="gamify-line">
+            <span id="dailyGoalText">今日目标 0/20</span>
+            <span id="dailyGoalStatus">未达成</span>
+          </div>
+          <div class="goal-bar"><span id="dailyGoalBar"></span></div>
+        </div>
+        <div class="status-strip">
+          <span id="wordCount">0 词</span>
+          <span class="memory-stats" id="memoryStats"></span>
+        </div>
+        <div class="goal-row">
+          <label class="toggle">
+            今日目标
+            <input class="goal-input" id="dailyGoalTargetInput" type="number" min="1" max="200" step="1" value="20" />
+          </label>
+          <button class="mini-btn" id="saveGoalBtn" type="button">保存目标</button>
+          <label class="toggle"><input type="checkbox" id="autoNext" checked />自动下一题</label>
+          <label class="toggle"><input type="checkbox" id="caseInsensitive" checked />忽略大小写</label>
+          <label class="toggle"><input type="checkbox" id="showIpa" checked />显示音标</label>
+        </div>
+        <div class="settings-row">
+          <span class="memory-stats" id="globalStats"></span>
+        </div>
+        <div class="list-controls">
+          <button class="mini-btn" id="showLearningBtn" type="button">看未掌握</button>
+          <button class="mini-btn" id="showMasteredBtn" type="button">看已掌握</button>
+          <button class="mini-btn" id="hideListBtn" type="button">收起清单</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="mastery-drawer" id="masteryDrawer">
+      <div class="list-card">
+        <h3 class="list-title" id="masteryTitle">未掌握清单</h3>
+        <div class="mastery-list" id="masteryViewList"></div>
+      </div>
+    </section>
+  </div>
+  <div class="confetti-layer" id="confettiLayer"></div>
+  <div class="goal-burst" id="goalBurst"><div class="goal-card">今日目标达成</div></div>
+
+  <script>
+    const sampleWords = [
+      {
+        word: "course",
+        pos: "n.",
+        ipa: "/kɔːrs/",
+        cn: "课程",
+        en: "a series of lessons or lectures on a particular subject",
+        example: "He took a course in Russian language and literature."
+      },
+      {
+        word: "work experience",
+        pos: "n.",
+        ipa: "/ˈwɜːrk ɪkspɪəriəns/",
+        cn: "工作经验",
+        en: "the work or jobs that you have done in your life so far",
+        example: "Opportunities depend on your previous work experience and qualifications."
+      },
+      {
+        word: "lecture",
+        pos: "n.",
+        ipa: "/ˈlektʃər/",
+        cn: "讲座",
+        en: "a talk that is given to a group of people to teach them about a particular subject",
+        example: "She spoke about environmental problems in a lecture."
+      },
+      {
+        word: "exchange",
+        pos: "v.",
+        ipa: "/ɪksˈtʃeɪndʒ/",
+        cn: "交换",
+        en: "to give something to somebody and at the same time receive the same type of thing from them",
+        example: "Everyone exchanged email addresses."
+      },
+      {
+        word: "note",
+        pos: "n.",
+        ipa: "/nəʊt/",
+        cn: "笔记",
+        en: "a short piece of writing to help you remember something",
+        example: "Please make a note of the dates."
+      },
+      {
+        word: "skill",
+        pos: "n.",
+        ipa: "/skɪl/",
+        cn: "技能",
+        en: "the ability to do something well",
+        example: "The job requires skill and an eye for detail."
+      },
+      {
+        word: "degree",
+        pos: "n.",
+        ipa: "/dɪˈɡriː/",
+        cn: "学位",
+        en: "a course of study at a college or university, or the qualification given to a student",
+        example: "She has a physics degree from Edinburgh."
+      },
+      {
+        word: "subject",
+        pos: "n.",
+        ipa: "/ˈsʌbdʒekt/",
+        cn: "学科",
+        en: "an area of knowledge studied in a school, college, etc.",
+        example: "Biology is my favourite subject."
+      },
+      {
+        word: "project",
+        pos: "n.",
+        ipa: "/ˈprɑːdʒekt/",
+        cn: "课题；研究",
+        en: "a piece of work involving careful study of a subject over a period of time",
+        example: "My class is doing a project on medieval towns."
+      },
+      {
+        word: "schedule",
+        pos: "n.",
+        ipa: "/ˈskedʒuːl/",
+        cn: "时间表",
+        en: "a plan that lists all the work that you have to do and when you must do each thing",
+        example: "He took time out of his busy schedule to talk."
+      },
+      {
+        word: "practical",
+        pos: "adj.",
+        ipa: "/ˈpræktɪkl/",
+        cn: "实际的",
+        en: "connected with real situations rather than with ideas or theories",
+        example: "She offered some practical advice."
+      },
+      {
+        word: "engineering",
+        pos: "n.",
+        ipa: "/ˌendʒɪˈnɪrɪŋ/",
+        cn: "工程学",
+        en: "the activity of applying scientific knowledge to the design, building and control of machines, roads, bridges, electrical equipment, etc.",
+        example: "The bridge is a triumph of modern engineering."
+      }
+    ];
+
+    let words = [...sampleWords];
+    let sessionWords = [...sampleWords];
+    let currentWordId = "";
+    let promptMode = "cn";
+    let questionType = "spell";
+    let practiceMode = "smart";
+    let practiceScope = "session_first";
+    let practiceFocus = "normal";
+    let correctCount = 0;
+    let totalAttempts = 0;
+    let preferredVoice = null;
+    let wordProgress = {};
+    let masteryView = "none";
+    let currentPromptMode = "cn";
+    let sessionCombo = 0;
+    let sessionScore = 0;
+    let dailyGoalState = { date: "", correct: 0, celebratedTarget: 0 };
+
+    const STORAGE_KEY = "word_memory_progress_v2";
+    const GLOBAL_BANK_KEY = "word_global_bank_v1";
+    const DAILY_GOAL_KEY = "word_daily_goal_v1";
+    const DAILY_GOAL_TARGET_KEY = "word_daily_goal_target_v1";
+    const STORAGE_SCHEMA = "days_v1";
+    const REVIEW_STEPS_DAYS = [0, 1, 2, 4, 7, 15, 30];
+    const DEFAULT_DAILY_GOAL_TARGET = 20;
+
+    const promptEl = document.getElementById("prompt");
+    const trainerCardEl = document.getElementById("trainerCard");
+    const rewardToastEl = document.getElementById("rewardToast");
+    const confettiLayerEl = document.getElementById("confettiLayer");
+    const goalBurstEl = document.getElementById("goalBurst");
+    const metaEl = document.getElementById("meta");
+    const maskEl = document.getElementById("mask");
+    const answerInput = document.getElementById("answerInput");
+    const feedbackEl = document.getElementById("feedback");
+    const answerCard = document.getElementById("answerCard");
+    const modePill = document.getElementById("modePill");
+    const progressText = document.getElementById("progressText");
+    const scoreText = document.getElementById("scoreText");
+    const progressBar = document.getElementById("progressBar");
+    const wordCount = document.getElementById("wordCount");
+    const memoryStatsEl = document.getElementById("memoryStats");
+    const globalStatsEl = document.getElementById("globalStats");
+    const masteryDrawerEl = document.getElementById("masteryDrawer");
+    const masteryTitleEl = document.getElementById("masteryTitle");
+    const masteryViewListEl = document.getElementById("masteryViewList");
+    const comboTextEl = document.getElementById("comboText");
+    const comboScoreTextEl = document.getElementById("comboScoreText");
+    const comboBarEl = document.getElementById("comboBar");
+    const dailyGoalTextEl = document.getElementById("dailyGoalText");
+    const dailyGoalStatusEl = document.getElementById("dailyGoalStatus");
+    const dailyGoalBarEl = document.getElementById("dailyGoalBar");
+    const dailyGoalTargetInputEl = document.getElementById("dailyGoalTargetInput");
+    const focusToggleBtn = document.getElementById("focusToggleBtn");
+    const scopeToggleBtn = document.getElementById("scopeToggleBtn");
+    const modeButtons = Array.from(document.querySelectorAll("button[data-mode]"));
+    const typeButtons = Array.from(document.querySelectorAll("button[data-type]"));
+    let dailyGoalTarget = DEFAULT_DAILY_GOAL_TARGET;
+
+    const modeLabels = {
+      cn: "中文释义",
+      en: "英文释义",
+      pron: "发音提示",
+      mix: "随机混合"
+    };
+
+    const typeLabels = {
+      spell: "听写",
+      fill: "补全",
+      cloze: "例句挖空"
+    };
+
+    function normalize(value) {
+      const trimmed = value.trim();
+      if (document.getElementById("caseInsensitive").checked) {
+        return trimmed.toLowerCase();
+      }
+      return trimmed;
+    }
+
+    function toWordId(word) {
+      return (word.word || "").trim().toLowerCase();
+    }
+
+    function loadStoredProgress() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        wordProgress = raw ? JSON.parse(raw) : {};
+      } catch (error) {
+        wordProgress = {};
+      }
+    }
+
+    function saveStoredProgress() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(wordProgress));
+    }
+
+    function loadGlobalBank() {
+      try {
+        const raw = localStorage.getItem(GLOBAL_BANK_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch (error) {
+        return {};
+      }
+    }
+
+    function saveGlobalBank(bank) {
+      localStorage.setItem(GLOBAL_BANK_KEY, JSON.stringify(bank));
+    }
+
+    function mergeWordsIntoGlobalBank(wordList, sourceLabel) {
+      const bank = loadGlobalBank();
+      wordList.forEach((word) => {
+        const id = toWordId(word);
+        if (!id) return;
+        const prev = bank[id] || {};
+        bank[id] = {
+          id,
+          word: word.word || prev.word || "",
+          pos: word.pos || prev.pos || "",
+          ipa: word.ipa || prev.ipa || "",
+          cn: word.cn || prev.cn || "",
+          en: word.en || prev.en || "",
+          example: word.example || prev.example || "",
+          firstSeenAt: prev.firstSeenAt || Date.now(),
+          lastSource: sourceLabel || prev.lastSource || "unknown"
+        };
+      });
+      saveGlobalBank(bank);
+      return bank;
+    }
+
+    function getGlobalWords() {
+      const bank = loadGlobalBank();
+      return Object.values(bank)
+        .filter((item) => item && item.word)
+        .map((item) => ({
+          word: item.word,
+          pos: item.pos || "",
+          ipa: item.ipa || "",
+          cn: item.cn || "",
+          en: item.en || "",
+          example: item.example || ""
+        }));
+    }
+
+    function mergeUniqueWords(primary, secondary) {
+      const map = {};
+      [...primary, ...secondary].forEach((word) => {
+        const id = toWordId(word);
+        if (!id) return;
+        map[id] = map[id]
+          ? {
+              ...map[id],
+              word: map[id].word || word.word,
+              pos: map[id].pos || word.pos,
+              ipa: map[id].ipa || word.ipa,
+              cn: map[id].cn || word.cn,
+              en: map[id].en || word.en,
+              example: map[id].example || word.example
+            }
+          : { ...word };
+      });
+      return Object.values(map);
+    }
+
+    function isSessionMastered() {
+      if (!sessionWords.length) return false;
+      return sessionWords.every((word) => isMastered(getWordState(word)));
+    }
+
+    function getWeakWords(baseWords) {
+      const weak = baseWords
+        .map((word) => {
+          const state = getWordState(word);
+          if (state.seen === 0) return null;
+          const accuracy = state.correct / Math.max(state.seen, 1);
+          const wrongScore = state.wrong * 2 + (1 - accuracy) * 3;
+          const isWeak = state.wrong > 0 || accuracy < 0.75;
+          if (!isWeak) return null;
+          return { word, wrongScore, lastSeenAt: state.lastSeenAt || 0 };
+        })
+        .filter(Boolean)
+        .sort((a, b) => {
+          if (b.wrongScore !== a.wrongScore) return b.wrongScore - a.wrongScore;
+          return a.lastSeenAt - b.lastSeenAt;
+        });
+      return weak.map((item) => item.word);
+    }
+
+    function buildPracticeWords() {
+      let baseWords;
+      if (practiceScope === "global_mix") {
+        baseWords = mergeUniqueWords(sessionWords, getGlobalWords());
+      } else if (!isSessionMastered()) {
+        baseWords = [...sessionWords];
+      } else {
+        baseWords = mergeUniqueWords(sessionWords, getGlobalWords());
+      }
+
+      if (practiceFocus !== "wrong_boost") {
+        return baseWords;
+      }
+
+      const weakWords = getWeakWords(baseWords);
+      return weakWords.length ? weakWords : baseWords;
+    }
+
+    function refreshPracticePool(keepCurrent = true) {
+      const prevWordId = keepCurrent ? currentWordId : "";
+      words = buildPracticeWords();
+      if (!words.length) {
+        currentWordId = "";
+        return;
+      }
+      const hasPrev = prevWordId && words.some((word) => toWordId(word) === prevWordId);
+      currentWordId = hasPrev ? prevWordId : toWordId(words[0]);
+    }
+
+    function todayDateKey() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, "0");
+      const d = String(now.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function loadDailyGoal() {
+      const today = todayDateKey();
+      try {
+        const raw = localStorage.getItem(DAILY_GOAL_KEY);
+        dailyGoalState = raw ? JSON.parse(raw) : { date: today, correct: 0, celebratedTarget: 0 };
+      } catch (error) {
+        dailyGoalState = { date: today, correct: 0, celebratedTarget: 0 };
+      }
+
+      if (dailyGoalState.date !== today) {
+        dailyGoalState = { date: today, correct: 0, celebratedTarget: 0 };
+        saveDailyGoal();
+      }
+      if (typeof dailyGoalState.celebratedTarget !== "number") {
+        dailyGoalState.celebratedTarget = 0;
+      }
+    }
+
+    function saveDailyGoal() {
+      localStorage.setItem(DAILY_GOAL_KEY, JSON.stringify(dailyGoalState));
+    }
+
+    function loadDailyGoalTarget() {
+      const raw = localStorage.getItem(DAILY_GOAL_TARGET_KEY);
+      const num = Number(raw);
+      dailyGoalTarget = Number.isFinite(num) && num >= 1 ? Math.round(num) : DEFAULT_DAILY_GOAL_TARGET;
+      dailyGoalTargetInputEl.value = String(dailyGoalTarget);
+    }
+
+    function saveDailyGoalTarget() {
+      const prevTarget = dailyGoalTarget;
+      const num = Number(dailyGoalTargetInputEl.value);
+      if (!Number.isFinite(num) || num < 1) {
+        feedbackEl.className = "feedback bad";
+        feedbackEl.textContent = "每日目标需为 1 以上的数字。";
+        dailyGoalTargetInputEl.value = String(dailyGoalTarget);
+        return;
+      }
+      dailyGoalTarget = Math.min(200, Math.round(num));
+      dailyGoalTargetInputEl.value = String(dailyGoalTarget);
+      localStorage.setItem(DAILY_GOAL_TARGET_KEY, String(dailyGoalTarget));
+      if (dailyGoalTarget > dailyGoalState.correct) {
+        dailyGoalState.celebratedTarget = 0;
+      } else if (dailyGoalTarget !== prevTarget && dailyGoalState.celebratedTarget > dailyGoalTarget) {
+        dailyGoalState.celebratedTarget = dailyGoalTarget;
+      }
+      saveDailyGoal();
+      updateGamifyUI();
+      feedbackEl.className = "feedback good";
+      feedbackEl.textContent = `今日目标已设置为 ${dailyGoalTarget}。`;
+    }
+
+    function updateGamifyUI() {
+      const reached = dailyGoalState.correct >= dailyGoalTarget;
+      comboTextEl.textContent = `连击 ${sessionCombo}`;
+      comboScoreTextEl.textContent = `得分 ${sessionScore}`;
+      comboBarEl.style.width = `${Math.min((sessionCombo / 10) * 100, 100)}%`;
+      dailyGoalTextEl.textContent = `今日目标 ${dailyGoalState.correct}/${dailyGoalTarget}`;
+      dailyGoalBarEl.style.width = `${Math.min((dailyGoalState.correct / dailyGoalTarget) * 100, 100)}%`;
+      dailyGoalStatusEl.textContent = reached ? "已达成" : "未达成";
+    }
+
+    function triggerGoalBurst() {
+      goalBurstEl.classList.remove("show");
+      void goalBurstEl.offsetWidth;
+      goalBurstEl.classList.add("show");
+      for (let i = 0; i < 3; i += 1) {
+        setTimeout(() => blastConfetti(), i * 140);
+      }
+      setTimeout(() => goalBurstEl.classList.remove("show"), 1200);
+    }
+
+    function bumpDailyGoalOnCorrect() {
+      const today = todayDateKey();
+      if (dailyGoalState.date !== today) {
+        dailyGoalState = { date: today, correct: 0, celebratedTarget: 0 };
+      }
+      dailyGoalState.correct += 1;
+      if (dailyGoalState.correct >= dailyGoalTarget && dailyGoalState.celebratedTarget !== dailyGoalTarget) {
+        dailyGoalState.celebratedTarget = dailyGoalTarget;
+        triggerGoalBurst();
+      }
+      saveDailyGoal();
+      updateGamifyUI();
+    }
+
+    function getWordState(word) {
+      const id = toWordId(word);
+      if (!wordProgress[id]) {
+        wordProgress[id] = {
+          seen: 0,
+          correct: 0,
+          wrong: 0,
+          streak: 0,
+          box: 0,
+          lastSeenAt: 0,
+          nextReviewAt: 0,
+          modeCorrect: { cn: 0, en: 0, pron: 0 },
+          scheduleSchema: STORAGE_SCHEMA
+        };
+      }
+      return wordProgress[id];
+    }
+
+    function reviewTimestampByBox(box) {
+      const days = REVIEW_STEPS_DAYS[Math.min(box, REVIEW_STEPS_DAYS.length - 1)];
+      const base = new Date();
+      base.setHours(0, 0, 0, 0);
+      base.setDate(base.getDate() + days);
+      return base.getTime();
+    }
+
+    function formatDateByDay(timestamp) {
+      const date = new Date(timestamp);
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function passedModeCount(state) {
+      const modeCorrect = state.modeCorrect || {};
+      const keys = ["cn", "en", "pron"];
+      return keys.filter((key) => (modeCorrect[key] || 0) > 0).length;
+    }
+
+    function isMastered(state) {
+      return state.box >= 4 && state.streak >= 2 && passedModeCount(state) >= 2;
+    }
+
+    function updateMemoryStats() {
+      const now = Date.now();
+      let mastered = 0;
+      let learning = 0;
+      let due = 0;
+
+      words.forEach((word) => {
+        const state = getWordState(word);
+        if (state.seen > 0 && state.nextReviewAt <= now) {
+          due += 1;
+        }
+        if (state.seen === 0) return;
+        if (isMastered(state)) mastered += 1;
+        else learning += 1;
+      });
+
+      memoryStatsEl.textContent = `已掌握 ${mastered} · 学习中 ${learning} · 待复习 ${due}`;
+      updateGlobalStats();
+      renderMasteryLists();
+    }
+
+    function updateGlobalStats() {
+      const globalWords = getGlobalWords();
+      const now = Date.now();
+      let learned = 0;
+      let mastered = 0;
+      let due = 0;
+      globalWords.forEach((word) => {
+        const state = getWordState(word);
+        if (state.seen > 0) learned += 1;
+        if (state.seen > 0 && isMastered(state)) mastered += 1;
+        if (state.seen > 0 && state.nextReviewAt <= now) due += 1;
+      });
+      globalStatsEl.textContent = `累计 ${globalWords.length} · 已学 ${learned} · 已掌握 ${mastered} · 全局待复习 ${due}`;
+    }
+
+    function setMasteryView(nextView) {
+      masteryView = nextView;
+      const shouldShow = masteryView === "learning" || masteryView === "mastered";
+      masteryDrawerEl.classList.toggle("show", shouldShow);
+      renderMasteryLists();
+    }
+
+    function renderMasteryLists() {
+      const now = Date.now();
+      const mastered = [];
+      const learning = [];
+
+      words.forEach((word) => {
+        const state = getWordState(word);
+        const accuracy = state.seen ? Math.round((state.correct / state.seen) * 100) : 0;
+        const row = {
+          word: word.word,
+          box: state.box,
+          seen: state.seen,
+          accuracy,
+          nextReviewAt: state.nextReviewAt,
+          modePass: passedModeCount(state)
+        };
+        if (state.seen > 0 && isMastered(state)) mastered.push(row);
+        else learning.push(row);
+      });
+
+      learning.sort((a, b) => {
+        if (a.seen === 0 && b.seen !== 0) return -1;
+        if (a.seen !== 0 && b.seen === 0) return 1;
+        return a.nextReviewAt - b.nextReviewAt;
+      });
+      mastered.sort((a, b) => a.word.localeCompare(b.word));
+
+      if (masteryView === "none") {
+        return;
+      }
+
+      if (masteryView === "learning") {
+        masteryTitleEl.textContent = "未掌握清单";
+        masteryViewListEl.innerHTML = learning.length
+          ? learning.map((item) => {
+              let status = "未学习";
+              if (item.seen > 0) {
+                status = item.nextReviewAt <= now ? "今日复习" : `下次复习 ${formatDateByDay(item.nextReviewAt)}`;
+              }
+              return `
+                <div class="mastery-item" data-wordid="${toWordId({ word: item.word })}">
+                  <strong>${item.word}</strong>
+                  <span>${status} · 模式 ${item.modePass}/3 · Lv${item.box} · 正确率 ${item.accuracy}%</span>
+                </div>
+              `;
+            }).join("")
+          : '<div class="empty-text">暂无未掌握单词</div>';
+        return;
+      }
+
+      masteryTitleEl.textContent = "已掌握清单";
+      masteryViewListEl.innerHTML = mastered.length
+        ? mastered.map((item) => `
+          <div class="mastery-item" data-wordid="${toWordId({ word: item.word })}">
+            <strong>${item.word}</strong>
+            <span>已掌握 · 模式 ${item.modePass}/3 · Lv${item.box} · 正确率 ${item.accuracy}%</span>
+          </div>
+        `).join("")
+        : '<div class="empty-text">暂无已掌握单词</div>';
+    }
+
+    function recordAttempt(word, isCorrect, modeKey) {
+      const state = getWordState(word);
+      const now = Date.now();
+      state.seen += 1;
+      state.lastSeenAt = now;
+
+      if (isCorrect) {
+        state.correct += 1;
+        state.streak += 1;
+        if (["cn", "en", "pron"].includes(modeKey)) {
+          state.modeCorrect[modeKey] = (state.modeCorrect[modeKey] || 0) + 1;
+        }
+        state.box = Math.min(state.box + 1, REVIEW_STEPS_DAYS.length - 1);
+      } else {
+        state.wrong += 1;
+        state.streak = 0;
+        state.box = Math.max(state.box - 2, 0);
+      }
+
+      state.nextReviewAt = reviewTimestampByBox(state.box);
+      state.scheduleSchema = STORAGE_SCHEMA;
+      saveStoredProgress();
+      updateMemoryStats();
+      return state;
+    }
+
+    function blastConfetti() {
+      const colors = ["#2f7dff", "#22c55e", "#f59e0b", "#ec4899", "#06b6d4"];
+      const originX = 65 + Math.random() * 20;
+      const originY = 110;
+      for (let i = 0; i < 18; i += 1) {
+        const bit = document.createElement("span");
+        bit.className = "confetti-bit";
+        bit.style.left = `${originX + (Math.random() * 120 - 60)}px`;
+        bit.style.top = `${originY + (Math.random() * 12 - 6)}px`;
+        bit.style.background = colors[Math.floor(Math.random() * colors.length)];
+        bit.style.transform = `translateY(0) rotate(${Math.random() * 180}deg)`;
+        bit.style.animationDelay = `${Math.random() * 120}ms`;
+        confettiLayerEl.appendChild(bit);
+        setTimeout(() => bit.remove(), 900);
+      }
+    }
+
+    function playSuccessEffects(state) {
+      trainerCardEl.classList.remove("win");
+      promptEl.classList.remove("pop");
+      void trainerCardEl.offsetWidth;
+      trainerCardEl.classList.add("win");
+      promptEl.classList.add("pop");
+      const streak = state?.streak || 1;
+      const bonus = streak >= 3 ? `连对 x${streak}` : "答对 +1";
+      rewardToastEl.textContent = bonus;
+      rewardToastEl.classList.remove("show");
+      void rewardToastEl.offsetWidth;
+      rewardToastEl.classList.add("show");
+      if (streak >= 2) {
+        blastConfetti();
+      }
+      setTimeout(() => promptEl.classList.remove("pop"), 320);
+      setTimeout(() => trainerCardEl.classList.remove("win"), 560);
+    }
+
+    function playFailEffects() {
+      answerInput.classList.remove("shake");
+      void answerInput.offsetWidth;
+      answerInput.classList.add("shake");
+      setTimeout(() => answerInput.classList.remove("shake"), 360);
+    }
+
+    function jumpToWordById(wordId) {
+      const hasWord = words.some((word) => toWordId(word) === wordId);
+      if (!hasWord) return;
+      currentWordId = wordId;
+      setMasteryView("none");
+      renderPrompt();
+      feedbackEl.className = "feedback good";
+      feedbackEl.textContent = `已跳转到 ${currentWord().word}`;
+    }
+
+    function pickNextWordId() {
+      if (!words.length) return "";
+      if (practiceMode === "all") {
+        const idx = words.findIndex((word) => toWordId(word) === currentWordId);
+        const next = words[(idx + 1) % words.length];
+        return toWordId(next);
+      }
+
+      const now = Date.now();
+      const entries = words.map((word, idx) => ({ idx, state: getWordState(word) }));
+      const dueList = entries
+        .filter((entry) => entry.state.seen > 0 && entry.state.nextReviewAt <= now)
+        .sort((a, b) => {
+          if (a.state.box !== b.state.box) return a.state.box - b.state.box;
+          return a.state.lastSeenAt - b.state.lastSeenAt;
+        });
+
+      const currentIdx = words.findIndex((word) => toWordId(word) === currentWordId);
+      if (dueList.length > 1 || dueList[0]?.idx !== currentIdx) {
+        const nextDue = dueList.find((entry) => entry.idx !== currentIdx) || dueList[0];
+        if (nextDue) return toWordId(words[nextDue.idx]);
+      }
+
+      const unseen = entries.filter((entry) => entry.state.seen === 0);
+      if (unseen.length) {
+        return toWordId(words[unseen[0].idx]);
+      }
+
+      const weakest = [...entries].sort((a, b) => {
+        if (a.state.box !== b.state.box) return a.state.box - b.state.box;
+        return a.state.lastSeenAt - b.state.lastSeenAt;
+      })[0];
+
+      return weakest ? toWordId(words[weakest.idx]) : toWordId(words[0]);
+    }
+
+    function currentWord() {
+      if (!words.length) return null;
+      const found = words.find((word) => toWordId(word) === currentWordId);
+      return found || words[0];
+    }
+
+    function pickMode() {
+      if (promptMode === "mix") {
+        const modes = ["cn", "en", "pron"];
+        return modes[Math.floor(Math.random() * modes.length)];
+      }
+      return promptMode;
+    }
+
+    function buildMask(word) {
+      const letters = word.split("");
+      const alphaIndexes = letters
+        .map((ch, idx) => (/[a-zA-Z]/.test(ch) ? idx : -1))
+        .filter((idx) => idx >= 0);
+
+      if (!alphaIndexes.length) {
+        return word;
+      }
+
+      const reveal = new Set();
+      reveal.add(alphaIndexes[0]);
+      reveal.add(alphaIndexes[alphaIndexes.length - 1]);
+      alphaIndexes.forEach((idx, position) => {
+        if (position % 3 === 0) {
+          reveal.add(idx);
+        }
+      });
+
+      return letters.map((ch, idx) => {
+        if (!/[a-zA-Z]/.test(ch)) {
+          return ch;
+        }
+        return reveal.has(idx) ? ch : "_";
+      }).join("");
+    }
+
+    function renderMask(word) {
+      const masked = buildMask(word);
+      maskEl.innerHTML = masked.split("").map((ch) => {
+        if (ch === "_") {
+          return "<span>&nbsp;</span>";
+        }
+        if (ch === " ") {
+          return "&nbsp;";
+        }
+        return `<span>${ch}</span>`;
+      }).join("");
+    }
+
+    function escapeRegExp(text) {
+      return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
+    function buildClozeSentence(word) {
+      const source = (word.example || word.en || "").trim();
+      if (!source) {
+        return "暂无例句，可直接输入该单词拼写。";
+      }
+      const target = (word.word || "").trim();
+      if (!target) {
+        return source;
+      }
+      const blank = target.split(" ").map((part) => "_".repeat(Math.max(3, part.length))).join(" ");
+      const regex = new RegExp(escapeRegExp(target), "gi");
+      const replaced = source.replace(regex, blank);
+      if (replaced !== source) return replaced;
+      return `${source} (${blank})`;
+    }
+
+    function renderPrompt() {
+      refreshPracticePool(true);
+      if (!words.length) {
+        promptEl.textContent = "请先导入词库";
+        return;
+      }
+
+      const word = currentWord();
+      currentWordId = toWordId(word);
+      const activeMode = pickMode();
+      currentPromptMode = activeMode;
+      promptEl.dataset.mode = activeMode;
+      modePill.textContent = `提示：${modeLabels[promptMode]} · 题型：${typeLabels[questionType]}`;
+
+      if (activeMode === "cn") {
+        promptEl.textContent = word.cn || "(无)";
+      } else if (activeMode === "en") {
+        promptEl.textContent = word.en || "(无)";
+      } else {
+        promptEl.textContent = "听发音后写出单词";
+        speakWord(word.word);
+      }
+
+      if (questionType === "fill") {
+        maskEl.classList.remove("sentence");
+        maskEl.style.display = "block";
+        renderMask(word.word);
+        answerInput.placeholder = "补全并输入完整单词拼写";
+      } else if (questionType === "cloze") {
+        if (activeMode === "cn") {
+          promptEl.textContent = `根据中文提示完成例句：${word.cn || "(无)"}`;
+        } else if (activeMode === "en") {
+          promptEl.textContent = `根据英文提示完成例句`;
+        } else {
+          promptEl.textContent = "听发音并完成例句";
+        }
+        maskEl.classList.add("sentence");
+        maskEl.style.display = "block";
+        maskEl.textContent = buildClozeSentence(word);
+        answerInput.placeholder = "输入被挖空的完整单词";
+      } else {
+        maskEl.classList.remove("sentence");
+        maskEl.style.display = "none";
+        answerInput.placeholder = "在此输入单词拼写";
+      }
+
+      const showIpa = document.getElementById("showIpa").checked;
+      metaEl.innerHTML = `
+        <span>${word.pos || ""}</span>
+        ${showIpa ? `<span>${word.ipa || ""}</span>` : ""}
+      `;
+
+      answerInput.value = "";
+      feedbackEl.className = "feedback";
+      feedbackEl.textContent = "";
+      answerCard.classList.remove("show");
+      answerCard.innerHTML = "";
+
+      updateProgress();
+      syncSelectionUI();
+      updateMemoryStats();
+    }
+
+    function updateProgress() {
+      const idx = words.findIndex((word) => toWordId(word) === currentWordId);
+      progressText.textContent = `${words.length ? idx + 1 : 0} / ${words.length}`;
+      const score = totalAttempts ? Math.round((correctCount / totalAttempts) * 100) : 0;
+      scoreText.textContent = `正确率 ${score}%`;
+      progressBar.style.width = `${words.length ? ((idx + 1) / words.length) * 100 : 0}%`;
+      wordCount.textContent = `${words.length} 词`;
+    }
+
+    function showAnswer() {
+      const word = currentWord();
+      answerCard.classList.add("show");
+      answerCard.innerHTML = `
+        <div class="answer-word">${word.word}</div>
+        <div class="answer-detail">中文：${word.cn || "-"}</div>
+        <div class="answer-detail">英文：${word.en || "-"}</div>
+        <div class="answer-detail">扩展：${word.example || "-"}</div>
+      `;
+    }
+
+    function checkAnswer() {
+      const word = currentWord();
+      const guess = normalize(answerInput.value);
+      const target = normalize(word.word);
+
+      if (!guess) {
+        feedbackEl.className = "feedback bad";
+        feedbackEl.textContent = "先输入拼写再提交。";
+        return;
+      }
+
+      totalAttempts += 1;
+      if (guess === target) {
+        correctCount += 1;
+        const state = recordAttempt(word, true, currentPromptMode);
+        sessionCombo += 1;
+        sessionScore += 10 + sessionCombo * 2;
+        bumpDailyGoalOnCorrect();
+        updateGamifyUI();
+        feedbackEl.className = "feedback good";
+        feedbackEl.textContent = "正确！做得好。";
+        playSuccessEffects(state);
+        if (document.getElementById("autoNext").checked) {
+          setTimeout(nextWord, 500);
+        }
+      } else {
+        recordAttempt(word, false, currentPromptMode);
+        sessionCombo = 0;
+        updateGamifyUI();
+        feedbackEl.className = "feedback bad";
+        feedbackEl.textContent = "还差一点，看看答案再试一次。";
+        playFailEffects();
+      }
+
+      updateProgress();
+    }
+
+    function nextWord() {
+      if (!words.length) return;
+      currentWordId = pickNextWordId();
+      renderPrompt();
+    }
+
+    function shuffleWords() {
+      for (let i = words.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [words[i], words[j]] = [words[j], words[i]];
+      }
+      currentWordId = words.length ? toWordId(words[0]) : "";
+      renderPrompt();
+      renderList();
+    }
+
+    function speakWord(text) {
+      if (!text) return;
+      if (!("speechSynthesis" in window)) {
+        feedbackEl.className = "feedback bad";
+        feedbackEl.textContent = "当前浏览器不支持语音播放。";
+        return;
+      }
+
+      if (!preferredVoice) {
+        pickBestVoice();
+      }
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "en-US";
+      if (preferredVoice) {
+        utterance.voice = preferredVoice;
+        utterance.lang = preferredVoice.lang || "en-US";
+      }
+      utterance.rate = 0.92;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+      speechSynthesis.cancel();
+      speechSynthesis.speak(utterance);
+    }
+
+    function scoreVoice(voice) {
+      let score = 0;
+      const name = (voice.name || "").toLowerCase();
+      const lang = (voice.lang || "").toLowerCase();
+      if (lang.startsWith("en-us")) score += 40;
+      else if (lang.startsWith("en-gb")) score += 30;
+      else if (lang.startsWith("en")) score += 20;
+      if (voice.localService) score += 8;
+      if (name.includes("samantha") || name.includes("daniel") || name.includes("karen")) score += 16;
+      if (name.includes("google") || name.includes("natural") || name.includes("premium")) score += 14;
+      if (name.includes("enhanced") || name.includes("neural")) score += 10;
+      if (name.includes("compact")) score -= 4;
+      return score;
+    }
+
+    function pickBestVoice() {
+      if (!("speechSynthesis" in window)) return;
+      const voices = speechSynthesis.getVoices();
+      if (!voices.length) return;
+      preferredVoice = [...voices]
+        .filter((voice) => /^en/i.test(voice.lang))
+        .sort((a, b) => scoreVoice(b) - scoreVoice(a))[0] || null;
+    }
+
+    function syncSelectionUI() {
+      modeButtons.forEach((btn) => {
+        btn.classList.toggle("is-active", btn.dataset.mode === promptMode);
+      });
+      typeButtons.forEach((btn) => {
+        btn.classList.toggle("is-active", btn.dataset.type === questionType);
+      });
+      if (scopeToggleBtn) {
+        const isGlobal = practiceScope === "global_mix";
+        scopeToggleBtn.textContent = isGlobal ? "范围：全局混合" : "范围：清单优先";
+        scopeToggleBtn.classList.toggle("secondary", isGlobal);
+      }
+      if (focusToggleBtn) {
+        const boosted = practiceFocus === "wrong_boost";
+        focusToggleBtn.textContent = boosted ? "练习：错题强化" : "练习：普通";
+        focusToggleBtn.classList.toggle("secondary", boosted);
+      }
+    }
+
+    function renderList() {
+      renderMasteryLists();
+    }
+
+    function parseCSV(text) {
+      const rows = [];
+      let current = [];
+      let value = "";
+      let inQuotes = false;
+
+      for (let i = 0; i < text.length; i += 1) {
+        const char = text[i];
+        const next = text[i + 1];
+
+        if (char === '"') {
+          if (inQuotes && next === '"') {
+            value += '"';
+            i += 1;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (char === ',' && !inQuotes) {
+          current.push(value);
+          value = "";
+        } else if ((char === '\n' || char === '\r') && !inQuotes) {
+          if (value.length || current.length) {
+            current.push(value);
+            rows.push(current);
+            current = [];
+            value = "";
+          }
+        } else {
+          value += char;
+        }
+      }
+
+      if (value.length || current.length) {
+        current.push(value);
+        rows.push(current);
+      }
+
+      return rows;
+    }
+
+    function mapCSVToWords(text) {
+      const rows = parseCSV(text).filter((row) => row.some((cell) => cell.trim() !== ""));
+      if (!rows.length) return [];
+      const headers = rows[0].map((cell) => cell.trim().toLowerCase());
+      const data = rows.slice(1);
+
+      const get = (row, key) => {
+        const idx = headers.indexOf(key.toLowerCase());
+        return idx >= 0 ? (row[idx] || "").trim() : "";
+      };
+
+      return data.map((row) => {
+        const extension = get(row, "Extension");
+        return {
+          word: get(row, "Vocabulary") || get(row, "Word") || "",
+          pos: get(row, "PoS"),
+          ipa: get(row, "Phonetic"),
+          en: get(row, "Definition"),
+          cn: get(row, "Chinese"),
+          example: extension && extension !== "/" ? extension : ""
+        };
+      }).filter((item) => item.word);
+    }
+
+    function loadWords(nextWords, sourceLabel = "session") {
+      sessionWords = nextWords.length ? [...nextWords] : [];
+      mergeWordsIntoGlobalBank(sessionWords, sourceLabel);
+      words = [];
+      currentWordId = sessionWords.length ? toWordId(sessionWords[0]) : "";
+      correctCount = 0;
+      totalAttempts = 0;
+      sessionCombo = 0;
+      sessionScore = 0;
+      let migrated = false;
+      const allKnownWords = mergeUniqueWords(sessionWords, getGlobalWords());
+      allKnownWords.forEach((word) => {
+        const state = getWordState(word);
+        if (!state.modeCorrect || typeof state.modeCorrect !== "object") {
+          state.modeCorrect = { cn: 0, en: 0, pron: 0 };
+          migrated = true;
+        } else {
+          ["cn", "en", "pron"].forEach((key) => {
+            if (typeof state.modeCorrect[key] !== "number") {
+              state.modeCorrect[key] = 0;
+              migrated = true;
+            }
+          });
+        }
+        if (state.scheduleSchema !== STORAGE_SCHEMA) {
+          state.nextReviewAt = reviewTimestampByBox(state.box || 0);
+          state.scheduleSchema = STORAGE_SCHEMA;
+          migrated = true;
+        }
+      });
+      if (migrated) {
+        saveStoredProgress();
+      }
+      refreshPracticePool(true);
+      renderList();
+      renderPrompt();
+      updateProgress();
+      updateMemoryStats();
+      updateGamifyUI();
+    }
+
+    modeButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        promptMode = btn.dataset.mode;
+        renderPrompt();
+      });
+    });
+
+    typeButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        questionType = btn.dataset.type;
+        renderPrompt();
+      });
+    });
+
+    scopeToggleBtn?.addEventListener("click", () => {
+      practiceScope = practiceScope === "session_first" ? "global_mix" : "session_first";
+      refreshPracticePool(true);
+      renderPrompt();
+    });
+    focusToggleBtn?.addEventListener("click", () => {
+      practiceFocus = practiceFocus === "normal" ? "wrong_boost" : "normal";
+      refreshPracticePool(true);
+      renderPrompt();
+      if (practiceFocus === "wrong_boost" && getWeakWords(words).length === 0) {
+        feedbackEl.className = "feedback good";
+        feedbackEl.textContent = "当前暂无明显错题，已按普通推荐展示。";
+      }
+    });
+
+    document.getElementById("checkBtn").addEventListener("click", checkAnswer);
+    document.getElementById("revealBtn").addEventListener("click", showAnswer);
+    document.getElementById("hintBtn").addEventListener("click", () => {
+      const word = currentWord();
+      if (!word) return;
+      answerInput.value = word.word.slice(0, 1);
+      answerInput.focus();
+    });
+    document.getElementById("speakBtn").addEventListener("click", () => {
+      const word = currentWord();
+      if (word) speakWord(word.word);
+    });
+    document.getElementById("showIpa").addEventListener("change", renderPrompt);
+    document.getElementById("shuffleBtn")?.addEventListener("click", shuffleWords);
+    answerInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        checkAnswer();
+      }
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowRight") {
+        nextWord();
+      }
+    });
+
+    document.getElementById("csvInput").addEventListener("change", (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const text = reader.result;
+        if (typeof text === "string") {
+          const parsed = mapCSVToWords(text);
+          if (!parsed.length) {
+            feedbackEl.className = "feedback bad";
+            feedbackEl.textContent = "未能识别到词汇，请检查 CSV 列名。";
+            return;
+          }
+          const source = file.name || "csv";
+          loadWords(parsed, source);
+          feedbackEl.className = "feedback good";
+          feedbackEl.textContent = `已导入 ${parsed.length} 个单词。`;
+        }
+      };
+      reader.readAsText(file, "utf-8");
+    });
+
+    document.getElementById("loadSampleBtn").addEventListener("click", () => {
+      loadWords([...sampleWords], "sample");
+      feedbackEl.className = "feedback good";
+      feedbackEl.textContent = "已载入示例词库。";
+    });
+    document.getElementById("uploadBtn").addEventListener("click", () => {
+      document.getElementById("csvInput").click();
+    });
+    document.getElementById("showLearningBtn").addEventListener("click", () => {
+      setMasteryView(masteryView === "learning" ? "none" : "learning");
+    });
+    document.getElementById("showMasteredBtn").addEventListener("click", () => {
+      setMasteryView(masteryView === "mastered" ? "none" : "mastered");
+    });
+    document.getElementById("hideListBtn").addEventListener("click", () => {
+      setMasteryView("none");
+    });
+    document.getElementById("saveGoalBtn").addEventListener("click", saveDailyGoalTarget);
+    dailyGoalTargetInputEl.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") saveDailyGoalTarget();
+    });
+    masteryViewListEl.addEventListener("click", (event) => {
+      const target = event.target.closest(".mastery-item[data-wordid]");
+      if (!target) return;
+      const wordId = target.getAttribute("data-wordid");
+      if (!wordId) return;
+      jumpToWordById(wordId);
+    });
+
+    if ("speechSynthesis" in window) {
+      pickBestVoice();
+      speechSynthesis.onvoiceschanged = pickBestVoice;
+    }
+
+    loadStoredProgress();
+    loadDailyGoal();
+    loadDailyGoalTarget();
+    loadWords([...sampleWords], "sample");
+  </script>
+</body>
+</html>
