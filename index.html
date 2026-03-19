@@ -567,6 +567,20 @@
       animation: popGoal 1.2s ease;
     }
 
+    .version-chip {
+      position: fixed;
+      right: 10px;
+      bottom: 10px;
+      z-index: 20;
+      font-size: 11px;
+      color: #64748b;
+      background: rgba(248, 250, 252, 0.94);
+      border: 1px solid #e2e8f0;
+      border-radius: 999px;
+      padding: 5px 9px;
+      backdrop-filter: blur(2px);
+    }
+
     .confetti-bit {
       position: absolute;
       width: 8px;
@@ -718,6 +732,8 @@
         <div class="list-controls">
           <button class="mini-btn" id="showLearningBtn" type="button">看未掌握</button>
           <button class="mini-btn" id="showMasteredBtn" type="button">看已掌握</button>
+          <button class="mini-btn" id="exportDataBtn" type="button">导出学习记录</button>
+          <button class="mini-btn" id="importDataBtn" type="button">导入学习记录</button>
           <button class="mini-btn" id="hideListBtn" type="button">收起清单</button>
         </div>
       </div>
@@ -730,8 +746,10 @@
       </div>
     </section>
   </div>
+  <input class="file-input" type="file" id="importDataInput" accept=".json,application/json" />
   <div class="confetti-layer" id="confettiLayer"></div>
   <div class="goal-burst" id="goalBurst"><div class="goal-card">今日目标达成</div></div>
+  <div class="version-chip" id="versionChip">updated 2026-03-19 18:55</div>
 
   <script>
     const sampleWords = [
@@ -858,6 +876,8 @@
     const STORAGE_SCHEMA = "days_v1";
     const REVIEW_STEPS_DAYS = [0, 1, 2, 4, 7, 15, 30];
     const DEFAULT_DAILY_GOAL_TARGET = 20;
+    const APP_VERSION = "2026.03.19-1";
+    const APP_UPDATED_AT = "2026-03-19 18:55";
 
     const promptEl = document.getElementById("prompt");
     const trainerCardEl = document.getElementById("trainerCard");
@@ -886,6 +906,7 @@
     const dailyGoalStatusEl = document.getElementById("dailyGoalStatus");
     const dailyGoalBarEl = document.getElementById("dailyGoalBar");
     const dailyGoalTargetInputEl = document.getElementById("dailyGoalTargetInput");
+    const importDataInputEl = document.getElementById("importDataInput");
     const focusToggleBtn = document.getElementById("focusToggleBtn");
     const scopeToggleBtn = document.getElementById("scopeToggleBtn");
     const modeButtons = Array.from(document.querySelectorAll("button[data-mode]"));
@@ -928,6 +949,89 @@
 
     function saveStoredProgress() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(wordProgress));
+    }
+
+    function exportLearningData() {
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        appVersion: APP_VERSION,
+        appUpdatedAt: APP_UPDATED_AT,
+        keys: {
+          progress: STORAGE_KEY,
+          globalBank: GLOBAL_BANK_KEY,
+          dailyGoal: DAILY_GOAL_KEY,
+          dailyGoalTarget: DAILY_GOAL_TARGET_KEY
+        },
+        data: {
+          progress: wordProgress,
+          globalBank: loadGlobalBank(),
+          dailyGoal: dailyGoalState,
+          dailyGoalTarget
+        }
+      };
+
+      const json = JSON.stringify(payload, null, 2);
+      const blob = new Blob([json], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const date = todayDateKey();
+      a.href = url;
+      a.download = `englishword-learning-backup-${date}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      feedbackEl.className = "feedback good";
+      feedbackEl.textContent = "学习记录已导出。";
+    }
+
+    function importLearningDataFromText(text) {
+      let parsed;
+      try {
+        parsed = JSON.parse(text);
+      } catch (error) {
+        feedbackEl.className = "feedback bad";
+        feedbackEl.textContent = "导入失败：JSON 格式不正确。";
+        return;
+      }
+
+      const imported = parsed?.data || {};
+      const progress = imported.progress;
+      const globalBank = imported.globalBank;
+      const dailyGoal = imported.dailyGoal;
+      const target = imported.dailyGoalTarget;
+
+      if (!progress || typeof progress !== "object" || !globalBank || typeof globalBank !== "object") {
+        feedbackEl.className = "feedback bad";
+        feedbackEl.textContent = "导入失败：文件内容不完整。";
+        return;
+      }
+
+      wordProgress = progress;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+      localStorage.setItem(GLOBAL_BANK_KEY, JSON.stringify(globalBank));
+
+      if (dailyGoal && typeof dailyGoal === "object") {
+        dailyGoalState = dailyGoal;
+        localStorage.setItem(DAILY_GOAL_KEY, JSON.stringify(dailyGoal));
+      }
+
+      if (Number.isFinite(Number(target)) && Number(target) >= 1) {
+        dailyGoalTarget = Math.min(200, Math.round(Number(target)));
+        localStorage.setItem(DAILY_GOAL_TARGET_KEY, String(dailyGoalTarget));
+      }
+
+      loadDailyGoal();
+      loadDailyGoalTarget();
+      refreshPracticePool(true);
+      renderPrompt();
+      updateProgress();
+      updateMemoryStats();
+      updateGamifyUI();
+
+      feedbackEl.className = "feedback good";
+      feedbackEl.textContent = "学习记录已导入。";
     }
 
     function loadGlobalBank() {
@@ -1889,6 +1993,21 @@
     document.getElementById("hideListBtn").addEventListener("click", () => {
       setMasteryView("none");
     });
+    document.getElementById("exportDataBtn").addEventListener("click", exportLearningData);
+    document.getElementById("importDataBtn").addEventListener("click", () => {
+      importDataInputEl.click();
+    });
+    importDataInputEl.addEventListener("change", (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const text = typeof reader.result === "string" ? reader.result : "";
+        importLearningDataFromText(text);
+        importDataInputEl.value = "";
+      };
+      reader.readAsText(file, "utf-8");
+    });
     document.getElementById("saveGoalBtn").addEventListener("click", saveDailyGoalTarget);
     dailyGoalTargetInputEl.addEventListener("keydown", (event) => {
       if (event.key === "Enter") saveDailyGoalTarget();
@@ -1909,6 +2028,10 @@
     loadStoredProgress();
     loadDailyGoal();
     loadDailyGoalTarget();
+    const versionChip = document.getElementById("versionChip");
+    if (versionChip) {
+      versionChip.textContent = `updated ${APP_UPDATED_AT}`;
+    }
     loadWords([...sampleWords], "sample");
   </script>
 </body>
